@@ -1,0 +1,5 @@
+syntax:glob
+apache2.conf
+apache2.pid
+error_log
+access_log
