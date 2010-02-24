@@ -18,10 +18,10 @@ DOC_ROOT = join(APP_ROOT, 'www')
 SERVER_ROOT = join(APP_ROOT, 'server')
 CONFIG_FILE = join(SERVER_ROOT, 'apache2.conf')
 
-if option.command == 'stop':
-    ret = os.system("apache2 -f %s -k stop" % CONFIG_FILE)
+if option.command in ('stop', 'restart'):
+    ret = os.system("apache2 -f %s -k %s" % (CONFIG_FILE, option.command))
     if ret == 0:
-        print "Stopping apache2 ..."
+        print "%s apache2 ..." % option.command
     sys.exit()
 
 CONFIG = """
