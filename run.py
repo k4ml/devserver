@@ -10,6 +10,7 @@ parser = OptionParser()
 parser.add_option("-a", "--address", default="127.0.0.1", help="Server address to listen")
 parser.add_option("-p", "--port", default="8000", help="Server port to listen")
 parser.add_option("-k", "--command", help="Apache2 command to run")
+parser.add_option("-b", "--httpd", default="apache2", help="Apache2 httpd binary to run")
 
 (option, args) = parser.parse_args()
 
@@ -19,30 +20,31 @@ SERVER_ROOT = join(APP_ROOT, 'server')
 CONFIG_FILE = join(SERVER_ROOT, 'apache2.conf')
 
 if option.command in ('stop', 'restart'):
-    ret = os.system("apache2 -f %s -k %s" % (CONFIG_FILE, option.command))
+    ret = os.system("%s -f %s -k %s" % (option.httpd, CONFIG_FILE, option.command))
     if ret == 0:
         print "%s apache2 ..." % option.command
     sys.exit()
 
 CONFIG = """
-LoadModule alias_module /usr/lib/apache2/modules/mod_alias.so
-LoadModule auth_basic_module /usr/lib/apache2/modules/mod_auth_basic.so
-LoadModule authn_file_module /usr/lib/apache2/modules/mod_authn_file.so
-LoadModule authz_default_module /usr/lib/apache2/modules/mod_authz_default.so
-LoadModule authz_groupfile_module /usr/lib/apache2/modules/mod_authz_groupfile.so
-LoadModule authz_host_module /usr/lib/apache2/modules/mod_authz_host.so
-LoadModule authz_user_module /usr/lib/apache2/modules/mod_authz_user.so
-LoadModule autoindex_module /usr/lib/apache2/modules/mod_autoindex.so
-LoadModule cgi_module /usr/lib/apache2/modules/mod_cgi.so
-LoadModule dir_module /usr/lib/apache2/modules/mod_dir.so
-LoadModule env_module /usr/lib/apache2/modules/mod_env.so
-LoadModule mime_module /usr/lib/apache2/modules/mod_mime.so
-LoadModule negotiation_module /usr/lib/apache2/modules/mod_negotiation.so
-LoadModule php5_module /usr/lib/apache2/modules/libphp5.so
-LoadModule rewrite_module /usr/lib/apache2/modules/mod_rewrite.so
-LoadModule setenvif_module /usr/lib/apache2/modules/mod_setenvif.so
-LoadModule status_module /usr/lib/apache2/modules/mod_status.so
-LoadModule userdir_module /usr/lib/apache2/modules/mod_userdir.so
+LoadModule alias_module /usr/lib/${httpd}/modules/mod_alias.so
+LoadModule auth_basic_module /usr/lib/${httpd}/modules/mod_auth_basic.so
+LoadModule authn_file_module /usr/lib/${httpd}/modules/mod_authn_file.so
+LoadModule authz_default_module /usr/lib/${httpd}/modules/mod_authz_default.so
+LoadModule authz_groupfile_module /usr/lib/${httpd}/modules/mod_authz_groupfile.so
+LoadModule authz_host_module /usr/lib/${httpd}/modules/mod_authz_host.so
+LoadModule authz_user_module /usr/lib/${httpd}/modules/mod_authz_user.so
+LoadModule autoindex_module /usr/lib/${httpd}/modules/mod_autoindex.so
+LoadModule cgi_module /usr/lib/${httpd}/modules/mod_cgi.so
+LoadModule dir_module /usr/lib/${httpd}/modules/mod_dir.so
+LoadModule env_module /usr/lib/${httpd}/modules/mod_env.so
+LoadModule mime_module /usr/lib/${httpd}/modules/mod_mime.so
+LoadModule negotiation_module /usr/lib/${httpd}/modules/mod_negotiation.so
+LoadModule php5_module /usr/lib/${httpd}/modules/libphp5.so
+LoadModule rewrite_module /usr/lib/${httpd}/modules/mod_rewrite.so
+LoadModule setenvif_module /usr/lib/${httpd}/modules/mod_setenvif.so
+LoadModule status_module /usr/lib/${httpd}/modules/mod_status.so
+LoadModule userdir_module /usr/lib/${httpd}/modules/mod_userdir.so
+LoadModule log_config_module /usr/lib/${httpd}/modules/mod_log_config.so
 
 TypesConfig /etc/mime.types
 
@@ -55,6 +57,12 @@ ErrorLog ${server_root}/error_log
 ServerName localhost
  
 PidFile ${server_root}/apache2.pid
+
+#
+# Cause the PHP interpreter to handle files with a .php extension.
+#
+AddHandler php5-script .php
+AddType text/html .php
 
 DirectoryIndex index.php
 
@@ -83,6 +91,7 @@ template_vars = {
     'server_root': SERVER_ROOT,
     'address': option.address,
     'port': option.port,
+    'httpd': option.httpd,
 }
 
 f = open(CONFIG_FILE, "w")
@@ -92,6 +101,6 @@ finally:
     f.flush()
     f.close()
 
-ret = os.system("apache2 -f %s -k start" % CONFIG_FILE)
+ret = os.system("%s -f %s -k start" % (option.httpd, CONFIG_FILE))
 if ret == 0:
     print "Running apache at %s:%s" % (option.address, option.port)
