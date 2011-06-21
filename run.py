@@ -11,6 +11,7 @@ parser.add_option("-a", "--address", default="127.0.0.1", help="Server address t
 parser.add_option("-p", "--port", default="8000", help="Server port to listen")
 parser.add_option("-k", "--command", help="Apache2 command to run")
 parser.add_option("-b", "--httpd", default="apache2", help="Apache2 httpd binary to run")
+parser.add_option("-m", "--module", default="/usr/lib/apache2", help="Apache2 modules path")
 
 (option, args) = parser.parse_args()
 
@@ -26,25 +27,26 @@ if option.command in ('stop', 'restart'):
     sys.exit()
 
 CONFIG = """
-LoadModule alias_module /usr/lib/${httpd}/modules/mod_alias.so
-LoadModule auth_basic_module /usr/lib/${httpd}/modules/mod_auth_basic.so
-LoadModule authn_file_module /usr/lib/${httpd}/modules/mod_authn_file.so
-LoadModule authz_default_module /usr/lib/${httpd}/modules/mod_authz_default.so
-LoadModule authz_groupfile_module /usr/lib/${httpd}/modules/mod_authz_groupfile.so
-LoadModule authz_host_module /usr/lib/${httpd}/modules/mod_authz_host.so
-LoadModule authz_user_module /usr/lib/${httpd}/modules/mod_authz_user.so
-LoadModule autoindex_module /usr/lib/${httpd}/modules/mod_autoindex.so
-LoadModule cgi_module /usr/lib/${httpd}/modules/mod_cgi.so
-LoadModule dir_module /usr/lib/${httpd}/modules/mod_dir.so
-LoadModule env_module /usr/lib/${httpd}/modules/mod_env.so
-LoadModule mime_module /usr/lib/${httpd}/modules/mod_mime.so
-LoadModule negotiation_module /usr/lib/${httpd}/modules/mod_negotiation.so
-LoadModule php5_module /usr/lib/${httpd}/modules/libphp5.so
-LoadModule rewrite_module /usr/lib/${httpd}/modules/mod_rewrite.so
-LoadModule setenvif_module /usr/lib/${httpd}/modules/mod_setenvif.so
-LoadModule status_module /usr/lib/${httpd}/modules/mod_status.so
-LoadModule userdir_module /usr/lib/${httpd}/modules/mod_userdir.so
-LoadModule log_config_module /usr/lib/${httpd}/modules/mod_log_config.so
+ServerRoot $module
+LoadModule alias_module modules/mod_alias.so
+LoadModule auth_basic_module modules/mod_auth_basic.so
+LoadModule authn_file_module modules/mod_authn_file.so
+LoadModule authz_default_module modules/mod_authz_default.so
+LoadModule authz_groupfile_module modules/mod_authz_groupfile.so
+LoadModule authz_host_module modules/mod_authz_host.so
+LoadModule authz_user_module modules/mod_authz_user.so
+LoadModule autoindex_module modules/mod_autoindex.so
+LoadModule cgi_module modules/mod_cgi.so
+LoadModule dir_module modules/mod_dir.so
+LoadModule env_module modules/mod_env.so
+LoadModule mime_module modules/mod_mime.so
+LoadModule negotiation_module modules/mod_negotiation.so
+LoadModule php5_module modules/libphp5.so
+LoadModule rewrite_module modules/mod_rewrite.so
+LoadModule setenvif_module modules/mod_setenvif.so
+LoadModule status_module modules/mod_status.so
+LoadModule userdir_module modules/mod_userdir.so
+LoadModule log_config_module modules/mod_log_config.so
 
 TypesConfig /etc/mime.types
 
@@ -92,6 +94,7 @@ template_vars = {
     'address': option.address,
     'port': option.port,
     'httpd': option.httpd,
+    'module': option.module,
 }
 
 f = open(CONFIG_FILE, "w")
