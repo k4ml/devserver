@@ -13,3 +13,9 @@ Running apache at 127.0.0.1:8000
 $ ./run.py -k stop
 Stopping apache2 ...
 </pre>
+
+Enable mod_wsgi, disabling modules:-
+
+<pre>
+./run.py -e "php5_module:log_config_module" --wsgi
+</pre>
