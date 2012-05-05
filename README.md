@@ -19,3 +19,8 @@ Enable mod_wsgi, disabling modules:-
 <pre>
 ./run.py -e "php5_module:log_config_module" --wsgi
 </pre>
+
+# TODOS
+
+* Allow passing list of import path for mod_wsgi, currently hardcoded.
+
