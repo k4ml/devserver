@@ -12,6 +12,8 @@ parser.add_option("-p", "--port", default="8000", help="Server port to listen")
 parser.add_option("-k", "--command", help="Apache2 command to run")
 parser.add_option("-b", "--httpd", default="apache2", help="Apache2 httpd binary to run")
 parser.add_option("-m", "--module", default="/usr/lib/apache2", help="Apache2 modules path")
+parser.add_option("-e", "--exclude-module", help="apache module to exclude")
+parser.add_option("--wsgi", default=False, action='store_true', help="Enable wsgi or not")
 
 (option, args) = parser.parse_args()
 
@@ -26,27 +28,42 @@ if option.command in ('stop', 'restart'):
         print "%s apache2 ..." % option.command
     sys.exit()
 
+MODULES = (
+    'alias_module',
+    'auth_basic_module',
+    'authn_file_module',
+    'authz_default_module',
+    'authz_groupfile_module',
+    'authz_host_module',
+    'authz_user_module',
+    'autoindex_module',
+    'cgi_module',
+    'dir_module',
+    'env_module',
+    'mime_module',
+    'negotiation_module',
+    'php5_module',
+    'rewrite_module',
+    'setenvif_module',
+    'status_module',
+    'userdir_module',
+    'log_config_module',
+    'wsgi_module',
+)
+
+config_modules = list()
+for module in MODULES:
+    if module in option.exclude_module.split(':'):
+        continue
+    module_so = 'mod_%s.so' % module.replace('_module', '')
+    config_modules.append('LoadModule %s modules/%s' % (module, module_so))
+
+CONFIG_MODULES = "\n".join(config_modules)
+
 CONFIG = """
 ServerRoot $module
-LoadModule alias_module modules/mod_alias.so
-LoadModule auth_basic_module modules/mod_auth_basic.so
-LoadModule authn_file_module modules/mod_authn_file.so
-LoadModule authz_default_module modules/mod_authz_default.so
-LoadModule authz_groupfile_module modules/mod_authz_groupfile.so
-LoadModule authz_host_module modules/mod_authz_host.so
-LoadModule authz_user_module modules/mod_authz_user.so
-LoadModule autoindex_module modules/mod_autoindex.so
-LoadModule cgi_module modules/mod_cgi.so
-LoadModule dir_module modules/mod_dir.so
-LoadModule env_module modules/mod_env.so
-LoadModule mime_module modules/mod_mime.so
-LoadModule negotiation_module modules/mod_negotiation.so
-LoadModule php5_module modules/libphp5.so
-LoadModule rewrite_module modules/mod_rewrite.so
-LoadModule setenvif_module modules/mod_setenvif.so
-LoadModule status_module modules/mod_status.so
-LoadModule userdir_module modules/mod_userdir.so
-LoadModule log_config_module modules/mod_log_config.so
+
+${modules}
 
 TypesConfig /etc/mime.types
 
@@ -66,6 +83,8 @@ PidFile ${server_root}/apache2.pid
 AddHandler php5-script .php
 AddType text/html .php
 
+${config_wsgi}
+
 DirectoryIndex index.php
 
 DocumentRoot $doc_root
@@ -81,6 +100,13 @@ DocumentRoot $doc_root
 </Directory>
 """
 
+CONFIG_WSGI = """
+WSGIDaemonProcess dev threads=2 display-name=%{GROUP} python-path=${app_root}/lib/python2.6/site-packages:${app_root}/app
+WSGIProcessGroup dev
+WSGISocketPrefix ${server_root}/wsgi
+WSGIScriptAlias / ${app_root}/wsgi/run.wsgi
+"""
+
 if 0:
     print "Option are: ", option
     print "Args are: ", args
@@ -88,14 +114,21 @@ if 0:
     print CONFIG_FILE
 
 template = Template(CONFIG)
+template_wsgi = Template(CONFIG_WSGI)
 template_vars = {
     'doc_root': DOC_ROOT,
     'server_root': SERVER_ROOT,
+    'app_root': APP_ROOT,
     'address': option.address,
     'port': option.port,
     'httpd': option.httpd,
     'module': option.module,
+    'modules': CONFIG_MODULES,
+    'config_wsgi': '',
 }
+
+if option.wsgi:
+    template_vars['config_wsgi'] = template_wsgi.substitute(template_vars)
 
 f = open(CONFIG_FILE, "w")
 try:
