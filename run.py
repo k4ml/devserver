@@ -12,7 +12,7 @@ parser.add_option("-p", "--port", default="8000", help="Server port to listen")
 parser.add_option("-k", "--command", help="Apache2 command to run")
 parser.add_option("-b", "--httpd", default="apache2", help="Apache2 httpd binary to run")
 parser.add_option("-m", "--module", default="/usr/lib/apache2", help="Apache2 modules path")
-parser.add_option("-e", "--exclude-module", help="apache module to exclude")
+parser.add_option("-e", "--exclude-module", default='', help="apache module to exclude")
 parser.add_option("--wsgi", default=False, action='store_true', help="Enable wsgi or not")
 
 (option, args) = parser.parse_args()
